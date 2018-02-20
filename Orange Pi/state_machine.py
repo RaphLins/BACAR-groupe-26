@@ -1,3 +1,4 @@
+
 """This is a template for State Machine Modules
 
    A State Machine module is a python file that contains a  `loop` function.
@@ -74,6 +75,10 @@ def loop():
 
         elif event.type == Event.CMD and event.val == "TEST_COMM":
             Car.send(5, -10, 3.14, -37.2)
+
+        elif event.type == Event.CMD and event.val[0:4] == "MAN ":
+            Car.send(int(event.val[4:6]), 0, 0, 0)
+            print ("manoeuvre ",int(event.val[4:6]))
 
         elif event.type == Event.PATH:
             if sign_count > 0:
