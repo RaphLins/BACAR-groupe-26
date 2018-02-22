@@ -33,10 +33,12 @@ void loop(){
     y = comm.yRead();
     u = comm.uRead();
     v = comm.vRead();
+    gauche.actuate(VG*u);
+    droit.actuate(VD*v);
     // et on les renvoie à l'Orange PI
     comm.sendMessage(x, y, u, v);
+    
     if (x != 0) currentMan = x;
-
     if(currentMan != 0){
       if (currentMan==11) {man_1_1(); currentMan=0;}
       else if (currentMan==12) {man_1_2(); currentMan=0;}
