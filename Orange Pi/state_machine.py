@@ -143,13 +143,7 @@ def handle_path_event(event):
 
 
 def actuate_heading(heading):
-    speed = 4
-    heading *= 0.4
-    if heading < -15:  # ignore absurd angles
-        heading = -15.0
-        speed = 3.0  # turn quicker
-    if heading > 15:  # ignore absurd angles
-        heading = 15.0
-        speed = 3.0
-
-    Car.send(0, 0, speed, heading)
+    offSet = heading*0.2/45
+    speedL = 1-offSet
+    speedR = 1+offSet
+    Car.send(0, 0, speedL, speedR)
