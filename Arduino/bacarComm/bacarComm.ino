@@ -33,8 +33,10 @@ void loop(){
     y = comm.yRead();
     u = comm.uRead();
     v = comm.vRead();
-    gauche.actuate(VG*u);
-    droit.actuate(VD*v);
+    if(currentMan == 0){
+      gauche.actuate(VG*u);
+      droit.actuate(VD*v);
+    }
     // et on les renvoie à l'Orange PI
     comm.sendMessage(x, y, u, v);
     
