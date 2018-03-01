@@ -29,6 +29,9 @@ from event import Event
 from car import Car
 import time
 
+SIMU = False
+# Mettre cette valeur sur True pour que le code fonctionne en simulation
+
 # constants for the different states in which we can be operating
 IDLE = 1
 STOPPED = 2
@@ -76,9 +79,9 @@ def loop():
         elif event.type == Event.CMD and event.val == "TEST_COMM":
             Car.send(5, -10, 3.14, -37.2)
 
-        elif event.type == Event.CMD and event.val[0:4] == "MAN ":
-            Car.send(int(event.val[4:6]), 0, 0, 0)
-            print ("manoeuvre ",int(event.val[4:6]))
+        elif event.type == Event.CMD and event.val[0:3] == "MAN":
+            Car.send(int(event.val[3:5]), 0, 0, 0)
+            print ("manoeuvre",int(event.val[3:5]))
 
         elif event.type == Event.PATH:
             if sign_count > 0:
@@ -143,7 +146,18 @@ def handle_path_event(event):
 
 
 def actuate_heading(heading):
-    offSet = heading*0.2/45
-    speedL = 1-offSet
-    speedR = 1+offSet
-    Car.send(0, 0, speedL, speedR)
+    if SIMU:
+        u = 4 #speed
+        v = 0.4 * heading #heading
+        if heading < -15:  # ignore absurd angles
+            u = -15.0
+            v = 3.0  # turn quicker
+        if heading > 15:  # ignore absurd angles
+            u = 15.0
+            v = 3.0
+    else:
+        offSet = heading*0.2/45
+        u = 1-offSet #vitesse moteur gauche
+        v = 1+offSet #vitesse moteur droit
+        
+    Car.send(0, 0, u, v)
