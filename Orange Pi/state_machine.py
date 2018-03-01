@@ -147,17 +147,17 @@ def handle_path_event(event):
 
 def actuate_heading(heading):
     if SIMU:
-        u = 4 #speed
-        v = 0.4 * heading #heading
+        u = 4 # Speed
+        v = 0.4 * heading # Heading
         if heading < -15:  # ignore absurd angles
-            u = -15.0
-            v = 3.0  # turn quicker
+            v = -15.0
+            u = 3.0  # turn quicker
         if heading > 15:  # ignore absurd angles
-            u = 15.0
-            v = 3.0
+            v = 15.0
+            u = 3.0
     else:
         offSet = heading*0.2/45
-        u = 1-offSet #vitesse moteur gauche
-        v = 1+offSet #vitesse moteur droit
+        u = 1-offSet # Vitesse moteur gauche
+        v = 1+offSet # Vitesse moteur droit
         
     Car.send(0, 0, u, v)
