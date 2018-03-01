@@ -4,18 +4,20 @@
 BacarComm comm;
 BacarMotor droit(9, 7, 8);
 BacarMotor gauche(10, 11, 12);
-float VG = 0.54;
-float VD = 0.53;
-int pinSensorG = 15;
-int pinSensorM = 16;
-int pinSensorD = 17;
+float VG = 0.54; //Vitesse max moteur gauche
+float VD = 0.53; //Vitesse max moteur droit
+int pinSensorG = 15; // capteur de bord gauche
+int pinSensorM = 16; // capteur frontal
+int pinSensorD = 17; // capteur de bord droit
 int sensorG;
 int sensorM;
 int sensorD;
 int currentMan = 0;
+bool ledState;
 
 void setup(){
   comm.begin();
+  pinMode(LED_BUILTIN, OUTPUT);
   pinMode(pinSensorG, INPUT);
   pinMode(pinSensorM, INPUT);
   pinMode(pinSensorD, INPUT);
@@ -39,9 +41,13 @@ void loop(){
     }
     // et on les renvoie à l'Orange PI
     comm.sendMessage(x, y, u, v);
+    ledState = not(ledState);
+    digitalWrite(LED_BUILTIN, ledState);
     
     if (x != 0) currentMan = x;
-    if(currentMan != 0){
+  }
+  
+  if(currentMan != 0){
       if (currentMan==11) {man_1_1(); currentMan=0;}
       else if (currentMan==12) {man_1_2(); currentMan=0;}
       else if (currentMan==13) {man_1_3(); currentMan=0;}
@@ -53,9 +59,8 @@ void loop(){
       else if (currentMan==23) {man_2_3(); currentMan=0;}
       else if (currentMan==24) {man_2_4(); currentMan=0;}
       else if (currentMan==25) {man_2_5(); currentMan=0;}
-    }
-    
   }
+  delay(20);
 }
 
 void man_1_1(){//5s
@@ -83,8 +88,8 @@ void man_1_5(){//stop si capteurs de bord
 void man_1_6(){//suit la chaussee avec capteurs de bord
   sensorG = digitalRead (pinSensorG);
   sensorD = digitalRead (pinSensorD);
-  if (sensorG == HIGH) avancer(VG, 0);
-  else if (sensorD == HIGH) avancer(0,VD);
+  if (sensorG == HIGH) avancer(VG*0.7, -VD*0.7);
+  else if (sensorD == HIGH) avancer(-VG*0.7, VD*0.7);
   else if (sensorD == HIGH && sensorG == HIGH) arret();
   else avancer();
 }
