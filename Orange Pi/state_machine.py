@@ -89,7 +89,7 @@ def loop():
                 sign_count -= 1
             handle_path_event(event)
 
-        elif event.type == Event.SIGN and DETECT_SIGN == True:
+        elif event.type == Event.SIGN and DETECT_SIGN:
             sign_dict = event.val
             sign_value = sign_dict["sign"]
             if sign_value == "stop":
