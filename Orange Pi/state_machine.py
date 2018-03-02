@@ -27,10 +27,11 @@ import logging
 import time
 from event import Event
 from car import Car
-import time
 
 SIMU = False
 # Mettre cette valeur sur True pour que le code fonctionne en simulation
+DETECT_SIGN = False
+# Mettre cette valeur sur True pour que la voiture detecte les panneaux
 
 # constants for the different states in which we can be operating
 IDLE = 1
@@ -88,7 +89,7 @@ def loop():
                 sign_count -= 1
             handle_path_event(event)
 
-        elif event.type == Event.SIGN:
+        elif event.type == Event.SIGN and DETECT_SIGN == True:
             sign_dict = event.val
             sign_value = sign_dict["sign"]
             if sign_value == "stop":
