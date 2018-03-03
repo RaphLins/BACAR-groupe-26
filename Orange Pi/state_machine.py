@@ -28,9 +28,9 @@ import time
 from event import Event
 from car import Car
 
-SIMU = False
+SIMU = True
 # Mettre cette valeur sur True pour que le code fonctionne en simulation
-DETECT_SIGN = False
+DETECT_SIGN = True
 # Mettre cette valeur sur True pour que la voiture detecte les panneaux
 
 # constants for the different states in which we can be operating
@@ -50,9 +50,11 @@ state = IDLE
 heading = 0
 sign_count = 0
 sign_value = ""
+sign_list = []
 path_dict = {}
 priority_order = ["straight", "left", "right"]
-
+turn_direction = "right"
+last_time_detected = 0
 
 def loop():
     '''State machine control loop.
@@ -71,6 +73,9 @@ def loop():
     global sign_count
     global sign_value
     global heading
+    global sign_list
+    global last_time_detected
+    global turn_direction
     event = Event.poll()
     if event is not None:
         if event.type == Event.CMD and event.val == "GO":
@@ -82,9 +87,12 @@ def loop():
 
         elif event.type == Event.CMD and event.val[0:3] == "MAN":
             Car.send(int(event.val[3:5]), 0, 0, 0)
-            print ("manoeuvre",int(event.val[3:5]))
+            print("manoeuvre", int(event.val[3:5]))
 
         elif event.type == Event.PATH:
+            print(round(time.time() - last_time_detected), turn_direction)
+            if time.time() - last_time_detected > 3:
+                turn_direction = ""
             if sign_count > 0:
                 sign_count -= 1
             handle_path_event(event)
@@ -92,12 +100,14 @@ def loop():
         elif event.type == Event.SIGN and DETECT_SIGN:
             sign_dict = event.val
             sign_value = sign_dict["sign"]
+            sign_list.append(sign_dict["sign"])
             if sign_value == "stop":
                 sign_count = 18
             elif sign_value == "left" and sign_count == 0:
                 sign_count = 30
             elif sign_value == "right "and sign_count == 0:
                 sign_count = 30
+            last_time_detected = time.time()
 
         elif event.type == Event.CMD and event.val == "STOP":
             logging.info("remotely ordered to stop")
@@ -119,12 +129,26 @@ def handle_path_event(event):
     global state
     global heading
     global sign_value
+    global sign_list
+    global turn_direction
     path_dict = event.val
     if 0 < sign_count < 18 and sign_value != "stop":
-        if sign_value == "left":
+
+        if turn_direction == "":
+            right_value = sign_list.count("right")
+            left_value = sign_list.count("left")
+            sign_list = []
+            if right_value < left_value:
+                turn_direction = "left"
+
+            else:
+                turn_direction = "right"
+
+        if turn_direction == "left":
             heading = path_dict["max_left"]
             print("Turning left", sign_count)
-        elif sign_value == "right":
+
+        elif turn_direction == "right":
             heading = path_dict["max_right"]
             print("Turning right", sign_count)
     else:
@@ -148,8 +172,8 @@ def handle_path_event(event):
 
 def actuate_heading(heading):
     if SIMU:
-        u = 4 # Speed
-        v = 0.4 * heading # Heading
+        u = 3  # Speed
+        v = 0.4 * heading  # Heading
         if heading < -15:  # ignore absurd angles
             v = -15.0
             u = 3.0  # turn quicker
@@ -158,7 +182,7 @@ def actuate_heading(heading):
             u = 3.0
     else:
         offSet = heading*0.2/45
-        u = 1-offSet # Vitesse moteur gauche
-        v = 1+offSet # Vitesse moteur droit
-        
+        u = 1-offSet  # Vitesse moteur gauche
+        v = 1+offSet  # Vitesse moteur droit
+
     Car.send(0, 0, u, v)
