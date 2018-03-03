@@ -108,18 +108,21 @@ def find_edge(mask, p0, p1):
     """trouve le bord de la route dans la direction p0->p1, renvoie un tuple avec le point et sa distance (de 0 100)"""
     x_tab, y_tab, line_tab = profile(mask, p0, p1, 100)
     non_zero = np.nonzero(line_tab)[0]
+    found = True
     while non_zero.size > 4:
         n = non_zero[0]
-        found=True
+        found = True
         for i in range(1,4):
-        	if not n==non_zero[i]-i and found:
-        		non_zero=np.delete(non_zero,0)
-        		found=False
+            if not non_zero[i] in range (n,n+7) and found:
+                non_zero=np.delete(non_zero,0)
+                found=False
         if found:
         	return [(int(x_tab[n]), int(y_tab[n])), n]
+    if non_zero.size !=0 and found:
+        n=non_zero[0]
+        return [(int(x_tab[n]), int(y_tab[n])), n]
 
     return [p1, 100]
-
 
 def model_to_heading(model_xy, car_center_xy):
     """Calculate the angle (in degrees) between the vertical line that
