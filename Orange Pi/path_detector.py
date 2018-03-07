@@ -73,7 +73,7 @@ def find_directions(mask, path_img, car_center):
 
         cv2.circle(path_img, edge[0], 4, (0, 255, 0), -1)
         cv2.line(path_img, center, p, (255, 0, 0))
-        angle += 6
+        angle += 5
     return (path_dict, path_img)
 
 
@@ -94,9 +94,9 @@ def find_min_max(mask, path_img, car_center):
             lst.append(edge[0])
         cv2.line(path_img, origin, p, (255, 0, 0))
         angle += 5
-    if len(lst) > 3:
-        right_edge = lst[3]
-        left_edge = lst[-3]
+    if len(lst) > 2:
+        right_edge = lst[2]
+        left_edge = lst[-2]
     else:
         right_edge = left_edge = img_width//2, 0
     cv2.circle(path_img, right_edge, 4, (0, 255, 0), -1)
@@ -112,17 +112,18 @@ def find_edge(mask, p0, p1):
     while non_zero.size > 4:
         n = non_zero[0]
         found = True
-        for i in range(1,4):
-            if not non_zero[i] in range (n,n+7) and found:
-                non_zero=np.delete(non_zero,0)
-                found=False
+        for i in range(1, 4):
+            if not non_zero[i] in range(n, n+7) and found:
+                non_zero = np.delete(non_zero, 0)
+                found = False
         if found:
-        	return [(int(x_tab[n]), int(y_tab[n])), n]
-    if non_zero.size !=0 and found:
-        n=non_zero[0]
+            return [(int(x_tab[n]), int(y_tab[n])), n]
+    if non_zero.size != 0 and found:
+        n = non_zero[0]
         return [(int(x_tab[n]), int(y_tab[n])), n]
 
     return [p1, 100]
+
 
 def model_to_heading(model_xy, car_center_xy):
     """Calculate the angle (in degrees) between the vertical line that
