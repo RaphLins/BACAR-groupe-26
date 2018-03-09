@@ -4,8 +4,8 @@
 BacarComm comm;
 BacarMotor droit(9, 7, 8);
 BacarMotor gauche(10, 11, 12);
-float VG = 0.54; //Vitesse max moteur gauche
-float VD = 0.53; //Vitesse max moteur droit
+float VG = 0.47; //Vitesse max moteur gauche
+float VD = 0.47; //Vitesse max moteur droit
 int pinSensorG = 15; // capteur de bord gauche
 int pinSensorM = 16; // capteur frontal
 int pinSensorD = 17; // capteur de bord droit
@@ -14,6 +14,7 @@ int sensorM;
 int sensorD;
 int currentMan = 0;
 bool ledState;
+bool CAPTEURS = True;
 
 void setup(){
   comm.begin();
@@ -29,7 +30,12 @@ void loop(){
   int32_t x, y;
   float u, v;
   // Vérifie si un nouveau message de l'Orange PI a été reçu
-  if (comm.newMessage() == true) {
+  sensorG = digitalRead (pinSensorG);
+  sensorD = digitalRead (pinSensorD);
+  if (sensorG == HIGH and CAPTEURS) avancer(VG*0.7, -VD*0.7);
+  else if (sensorD == HIGH and CAPTEURS) avancer(-VG*0.7, VD*0.7);
+  else if (((sensorD == HIGH && sensorG == HIGH) or sensorM == HIGH) and CAPTEURS) arret();
+  else if (comm.newMessage() == true) {
     // On lit les 4 valeurs contenues dans le message
     x = comm.xRead();
     y = comm.yRead();
