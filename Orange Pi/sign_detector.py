@@ -50,7 +50,7 @@ def detect(bb, sign):
     moyenne = s[0] // pixel
     moyenne2 = s[2] // pixel
 
-    if bb[2] > 35 or bb[1] < 40 or bb[3] < 15:
+    if bb[2] > 35 or bb[1] < 13 or bb[3] < 15:
         sign = ""
     elif moyenne > moyenne2:
         panneau_gauche = []
