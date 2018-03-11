@@ -38,8 +38,8 @@ def find_directions(mask, path_img, car_center):
     img_height, img_width = mask.shape
     path_dict = {'left': None, 'straight': None, 'right': None}
     currentDirection = []
-    center = img_width//2, int(img_height*0.4)
-    r = img_height*0.4
+    center = img_width//2, int(img_height*0.7)
+    r = img_height*0.25
     # la boucle for recherche les chemins libres dans chaque direction
     angle = -10
     while angle < 190:
@@ -81,12 +81,12 @@ def find_min_max(mask, path_img, car_center):
     img_height, img_width = mask.shape
     right_edge = (0, 0)
     left_edge = (0, 0)
-    r = img_height*0.4
+    r = img_height*0.25
     center = car_center
     lst = []
     angle = 45
     while angle < 135:
-        origin = p = int(center[0]+r*cos(angle*pi/180)*0.4), int(center[1]-r*sin(angle*pi/180)*0.4)
+        origin = p = int(center[0]+r*cos(angle*pi/180)*0.6), int(center[1]-r*sin(angle*pi/180)*0.6)
         p = int(center[0]+r*cos(angle*pi/180)), int(center[1]-r*sin(angle*pi/180))
         # verifie si le chemin dans la direction de p est libre
         edge = find_edge(mask, origin, p)
@@ -94,9 +94,9 @@ def find_min_max(mask, path_img, car_center):
             lst.append(edge[0])
         cv2.line(path_img, origin, p, (255, 0, 0))
         angle += 5
-    if len(lst) > 2:
-        right_edge = lst[2]
-        left_edge = lst[-2]
+    if len(lst) > 1:
+        right_edge = lst[1]
+        left_edge = lst[-1]
     else:
         right_edge = left_edge = img_width//2, 0
     cv2.circle(path_img, right_edge, 4, (0, 255, 0), -1)
