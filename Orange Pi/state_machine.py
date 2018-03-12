@@ -78,8 +78,8 @@ def loop():
 
         elif event.type == Event.SIGN and DETECT_SIGN:
             sign_dict = event.val
+            sign_value = sign_dict["sign"]
             if sign_value != "":
-                sign_value = sign_dict["sign"]
                 sign_count_dict[sign_value] += 1
                 last_time_detected = time.time()
                 if sign_value == "stop":
