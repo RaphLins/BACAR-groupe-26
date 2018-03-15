@@ -3,7 +3,7 @@ import time
 from event import Event
 from car import Car
 
-SIMU = False
+SIMU = True
 # Mettre cette valeur sur True pour que le code fonctionne en simulation
 DETECT_SIGN = True
 # Mettre cette valeur sur True pour que la voiture detecte les panneaux
@@ -16,7 +16,7 @@ TURNING = 4
 # You can add other states here
 
 TIME_TURNING = 2
-TIME_STOPPING = 2
+TIME_STOPPING = 3
 
 # Setup up the state machine. The following code is called when the state
 # machine is loaded for the first time.
@@ -62,21 +62,16 @@ def loop():
             logging.info("remotely ordered to GO!")
             state = MOVING
 
-        elif event.type == Event.CMD and event.val == "TEST_COMM":
-            Car.send(5, -10, 3.14, -37.2)
-
         elif event.type == Event.CMD and event.val[0:3] == "MAN":
             Car.send(int(event.val[3:5]), 0, 0, 0)
-            print("manoeuvre", int(event.val[3:5]))
+            print("Sent manoeuvre", int(event.val[3:5]))
 
-        elif event.type == Event.PATH:
-            if (time.time() - last_time_detected) > 2:
-                for i in sign_count_dict.keys():
-                    sign_count_dict[i] = 0
-                sign_value = ""
+        elif event.type == Event.PATH and state != IDLE:
+            if (time.time() - last_time_detected) > 3 and sign_value == "":
+                reset_sign_count()
             handle_path_event(event)
 
-        elif event.type == Event.SIGN and DETECT_SIGN:
+        elif event.type == Event.SIGN and DETECT_SIGN and state != IDLE:
             sign_dict = event.val
             sign_value = sign_dict["sign"]
             if sign_value != "":
@@ -89,12 +84,20 @@ def loop():
         elif event.type == Event.CMD and event.val == "STOP":
             logging.info("remotely ordered to stop")
             emergency_stop()
-            time.sleep(100)
+
+
+def reset_sign_count():
+    global sign_value
+    global sign_count_dict
+    for i in sign_count_dict.keys():
+        sign_count_dict[i] = 0
+    sign_value = ""
+
 
 def emergency_stop():
     global state
-    Car.send(0, 1, 0.0, 0.0)
-    state = STOPPED
+    send_stop()
+    state = IDLE
 
 
 def handle_path_event(event):
@@ -121,20 +124,17 @@ def handle_path_event(event):
             actuate_heading(heading)
         else:
             state = MOVING
-            for i in sign_count_dict.keys():
-                sign_count_dict[i] = 0
-            sign_value = ""
+            reset_sign_count()
             print("stop turning")
 
     if state == STOPPED:
         if now - action_start_time < TIME_STOPPING:
-            print("stoping")
+            send_stop()
+            print("stopping", TIME_STOPPING - int(now - action_start_time))
         else:
             state = MOVING
-            for i in sign_count_dict.keys():
-                sign_count_dict[i] = 0
-            sign_value = ""
-            print("stop stoping")
+            reset_sign_count()
+            print("stop stopping")
 
     if state == MOVING:
         values = list(sign_count_dict.keys())
@@ -143,45 +143,48 @@ def handle_path_event(event):
             sign_value = values[counts.index(max(counts))]
 
         if sign_value != "":  # Panneau detecte
-            action_start_time = time.time()
             if sign_value == "stop" and (now - last_time_stop_detected) > 2:
-                Car.send(0, 1, 0, 0)
+                action_start_time = time.time()
+                send_stop()
                 print("start stopping")
                 state = STOPPED
-            elif sign_value == "right" or sign_value == "left":
+            if sign_value == "right" or sign_value == "left":
                 if path_dict[sign_value] is not None:
+                    action_start_time = time.time()
                     heading = path_dict[sign_value]
                     state = TURNING
                     print("start turning", sign_value)
-        else:
+        if state == MOVING:
             found = False
             for direction in priority_order:
                 if path_dict[direction] is not None and not found:
                     heading = path_dict[direction]
-                    # print("following", direction, heading)
                     found = True
             if not found:
                 if heading > 0:
                     heading = path_dict["max_left"]
                 else:
                     heading = path_dict["max_right"]
-            actuate_heading(heading)
+        actuate_heading(heading)
+
+
+def send_stop():
+    if SIMU:
+        Car.send(0, 0, 0, 0)
+    else:
+        Car.send(0, 1, 0, 0)
 
 
 def actuate_heading(heading):
     if SIMU:
-        u = 3  # Speed
         v = 0.4 * heading  # Heading
         if heading < -15:  # ignore absurd angles
             v = -15.0
-            u = 3.0  # turn quicker
         if heading > 15:  # ignore absurd angles
             v = 15.0
-            u = 3.0
     else:
-        if heading == "" or heading == None:
+        if heading == "" or heading is None:
             heading = 0
-        u = 3
         v = heading * 2.5
 
-    Car.send(0, 0, u, v)
+    Car.send(0, 0, 3, v)
